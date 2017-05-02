@@ -1,3 +1,7 @@
+/*
+ * Ported from three.js by @rydrman
+ */
+
 package three
 
 const (
