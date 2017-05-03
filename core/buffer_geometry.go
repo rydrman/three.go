@@ -18,8 +18,8 @@ type BufferGeometry struct {
 	Name string
 	Type string
 
-	index           int
-	Attributes      map[string]BufferAttribute
+	Index           *BufferAttribute
+	Attributes      map[string]*BufferAttribute
 	MorphAttributes map[string]interface{}
 
 	Groups []int
@@ -32,9 +32,9 @@ type BufferGeometry struct {
 	*EventDispatcher
 }
 
-func (geo *BufferGeometry) getIndex() int {
+func (geo *BufferGeometry) getIndex() *BufferAttribute {
 
-	return geo.index
+	return geo.Index
 
 }
 
@@ -54,7 +54,7 @@ func (geo *BufferGeometry) getIndex() int {
 
 }*/
 
-func (geo *BufferGeometry) AddAttribute(name string, attribute BufferAttribute) {
+func (geo *BufferGeometry) AddAttribute(name string, attribute *BufferAttribute) {
 
 	if name == "index" {
 

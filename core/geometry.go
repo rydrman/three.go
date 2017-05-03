@@ -29,7 +29,7 @@ type Geometry struct {
 	SkinWeights []int
 	SkinIndices []int
 
-	lineDistances []float32
+	LineDistances []float32
 
 	BoundingBox *math3.Box3
 }
@@ -71,41 +71,41 @@ func NewGeometry() *Geometry {
 
 }
 
-/*Object.assign( Geometry.prototype, EventDispatcher.prototype, {
+/*Object.assign(Geometry.prototype, EventDispatcher.prototype, {
 
 isGeometry: true,
 
-applyMatrix: function ( matrix ) {
+applyMatrix: function (matrix) {
 
-    var normalMatrix = new Matrix3().getNormalMatrix( matrix )
+    var normalMatrix = new Matrix3().getNormalMatrix(matrix)
 
-    for ( var i = 0, il = this.vertices.length i < il i ++ ) {
+    for (var i = 0, il = this.vertices.length i < il i ++) {
 
-        var vertex = this.vertices[ i ]
-        vertex.applyMatrix4( matrix )
+        var vertex = this.vertices[i]
+        vertex.applyMatrix4(matrix)
 
     }
 
-    for ( var i = 0, il = this.faces.length i < il i ++ ) {
+    for (var i = 0, il = this.faces.length i < il i ++) {
 
-        var face = this.faces[ i ]
-        face.normal.applyMatrix3( normalMatrix ).normalize()
+        var face = this.faces[i]
+        face.normal.applyMatrix3(normalMatrix).normalize()
 
-        for ( var j = 0, jl = face.vertexNormals.length j < jl j ++ ) {
+        for (var j = 0, jl = face.vertexNormals.length j < jl j ++) {
 
-            face.vertexNormals[ j ].applyMatrix3( normalMatrix ).normalize()
+            face.vertexNormals[j].applyMatrix3(normalMatrix).normalize()
 
         }
 
     }
 
-    if ( this.boundingBox !== nil ) {
+    if (this.boundingBox != nil) {
 
         this.computeBoundingBox()
 
     }
 
-    if ( this.boundingSphere !== nil ) {
+    if (this.boundingSphere != nil) {
 
         this.computeBoundingSphere()
 
@@ -124,13 +124,13 @@ applyMatrix: function ( matrix ) {
 
     var m1
 
-    return function rotateX( angle ) {
+    return function rotateX(angle) {
 
-        if ( m1 === undefined ) m1 = new Matrix4()
+        if (m1 === nil) m1 = new Matrix4()
 
-        m1.makeRotationX( angle )
+        m1.makeRotationX(angle)
 
-        this.applyMatrix( m1 )
+        this.applyMatrix(m1)
 
         return this
 
@@ -144,13 +144,13 @@ applyMatrix: function ( matrix ) {
 
     var m1
 
-    return function rotateY( angle ) {
+    return function rotateY(angle) {
 
-        if ( m1 === undefined ) m1 = new Matrix4()
+        if (m1 === nil) m1 = new Matrix4()
 
-        m1.makeRotationY( angle )
+        m1.makeRotationY(angle)
 
-        this.applyMatrix( m1 )
+        this.applyMatrix(m1)
 
         return this
 
@@ -164,13 +164,13 @@ applyMatrix: function ( matrix ) {
 
     var m1
 
-    return function rotateZ( angle ) {
+    return function rotateZ(angle) {
 
-        if ( m1 === undefined ) m1 = new Matrix4()
+        if (m1 === nil) m1 = new Matrix4()
 
-        m1.makeRotationZ( angle )
+        m1.makeRotationZ(angle)
 
-        this.applyMatrix( m1 )
+        this.applyMatrix(m1)
 
         return this
 
@@ -184,13 +184,13 @@ applyMatrix: function ( matrix ) {
 
     var m1
 
-    return function translate( x, y, z ) {
+    return function translate(x, y, z) {
 
-        if ( m1 === undefined ) m1 = new Matrix4()
+        if (m1 === nil) m1 = new Matrix4()
 
-        m1.makeTranslation( x, y, z )
+        m1.makeTranslation(x, y, z)
 
-        this.applyMatrix( m1 )
+        this.applyMatrix(m1)
 
         return this
 
@@ -204,13 +204,13 @@ applyMatrix: function ( matrix ) {
 
     var m1
 
-    return function scale( x, y, z ) {
+    return function scale(x, y, z) {
 
-        if ( m1 === undefined ) m1 = new Matrix4()
+        if (m1 === nil) m1 = new Matrix4()
 
-        m1.makeScale( x, y, z )
+        m1.makeScale(x, y, z)
 
-        this.applyMatrix( m1 )
+        this.applyMatrix(m1)
 
         return this
 
@@ -222,161 +222,186 @@ applyMatrix: function ( matrix ) {
 
     var obj
 
-    return function lookAt( vector ) {
+    return function lookAt(vector) {
 
-        if ( obj === undefined ) obj = new Object3D()
+        if (obj === nil) obj = new Object3D()
 
-        obj.lookAt( vector )
+        obj.lookAt(vector)
 
         obj.updateMatrix()
 
-        this.applyMatrix( obj.matrix )
+        this.applyMatrix(obj.matrix)
 
     }
 
 }(),*/
 
-func (geo *Geometry) FromBufferGeometry(srcGeo *BufferGeometry) {
+func (geo *Geometry) FromBufferGeometry(srcGeo *BufferGeometry) *Geometry {
 
-    var indices []*float32
-    if srcGeo.getIndex != nil {
-        indices = srcGeo.Index.Array
-    }
+	var indices [][]float32
+	if srcGeo.getIndex != nil {
+		indices = srcGeo.Index.Array
+	}
 
-    var attributes = srcGeo.Attributes
-    var positions = Attributes["Position"].Array
+	var attributes = srcGeo.Attributes
+	var positions = attributes["Position"].Array
 
-    var Normals = Attributes["normal"] !== undefined ? Attributes["normal"].array : undefined
-        colors = Attributes["color"] !== undefined ? Attributes["color"].array : undefined
-        uvs = Attributes["uv"] !== undefined ? Attributes["uv"].array : undefined
-        uvs2 = Attributes["uv2"] !== undefined ? Attributes["uv2"].array : undefined
-    )
+	var (
+		normals []*math3.Vector3
+		colors  []*math3.Vector3
+		uvs     []*math3.Vector2
+		uvs2    []*math3.Vector2
+	)
 
-    if ( uvs2 !== undefined ) this.faceVertexUvs[ 1 ] = []
+	if val, ok := attributes["normal"]; ok {
+		normals = val.Array
+	}
+	if val, ok := attributes["color"]; ok {
+		colors = val.Array
+	}
+	if val, ok := attributes["uv"]; ok {
+		uvs = val.Array
+	}
+	if val, ok := attributes["uv2"]; ok {
+		uvs2 = val.Array
+	}
 
-    var (
-        tempNormals = []
-        tempUVs = []
-        tempUVs2 = []
-    )
+	if uvs2 != nil {
 
-    for ( var i = 0, j = 0 i < positions.length i += 3, j += 2 ) {
+		geo.FaceVertexUvs[1] = make([]*math3.Vector2)
 
-        scope.vertices.push( new Vector3( positions[ i ], positions[ i + 1 ], positions[ i + 2 ] ) )
+	}
 
-        if ( normals !== undefined ) {
+	var (
+		tempNormals []*math3.Vector2
+		tempUVs     []*math3.Vector2
+		tempUVs2    []*maths.Vector2
+	)
 
-            tempNormals.push( new Vector3( normals[ i ], normals[ i + 1 ], normals[ i + 2 ] ) )
+	for i, j := 0, 0; i < len(positions); i, j = i+3, j+2 {
 
-        }
+		geo.Vertices = append(geo.Vertices, math3.NewVector3(positions[i], positions[i+1], positions[i+2]))
 
-        if ( colors !== undefined ) {
+		if normals != nil {
 
-            scope.colors.push( new Color( colors[ i ], colors[ i + 1 ], colors[ i + 2 ] ) )
+			tempNormals = append(tempNormals, NewVector3(normals[i], normals[i+1], normals[i+2]))
 
-        }
+		}
 
-        if ( uvs !== undefined ) {
+		if colors != nil {
 
-            tempUVs.push( new Vector2( uvs[ j ], uvs[ j + 1 ] ) )
+			scope.colors = append(colors, NewColor(colors[i], colors[i+1], colors[i+2]))
 
-        }
+		}
 
-        if ( uvs2 !== undefined ) {
+		if uvs != nil {
 
-            tempUVs2.push( new Vector2( uvs2[ j ], uvs2[ j + 1 ] ) )
+			tempUVs = append(tempUVs, NewVector2(uvs[j], uvs[j+1]))
 
-        }
+		}
 
-    }
+		if uvs2 != nil {
 
-    function addFace( a, b, c, materialIndex ) {
+			tempUVs2 = append(tempUVs2, NewVector2(uvs2[j], uvs2[j+1]))
 
-        var vertexNormals = normals !== undefined ? [ tempNormals[ a ].clone(), tempNormals[ b ].clone(), tempNormals[ c ].clone() ] : []
-        var vertexColors = colors !== undefined ? [ scope.colors[ a ].clone(), scope.colors[ b ].clone(), scope.colors[ c ].clone() ] : []
+		}
 
-        var face = new Face3( a, b, c, vertexNormals, vertexColors, materialIndex )
+	}
 
-        scope.faces.push( face )
+	addFace := func(a, b, c int, materialIndex int) {
 
-        if ( uvs !== undefined ) {
+		var vertexNormals []*math3.Vector3
+		if normals != nil {
+			vertexNormals = append(vertexNormals, tempNormals[a].clone(), tempNormals[b].clone(), tempNormals[c].clone())
+		}
 
-            scope.faceVertexUvs[ 0 ].push( [ tempUVs[ a ].clone(), tempUVs[ b ].clone(), tempUVs[ c ].clone() ] )
+		var vertexColors []*math3.Color
+		if colors != nil {
+			vertexColors = append(vertexColors, geo.Colors[a].clone(), geo.Colors[b].clone(), geo.Colors[c].clone())
+		}
 
-        }
+		face := NewFace3(a, b, c, vertexNormals, vertexColors, materialIndex)
 
-        if ( uvs2 !== undefined ) {
+		geo.Faces = append(geo.Faces, face)
 
-            scope.faceVertexUvs[ 1 ].push( [ tempUVs2[ a ].clone(), tempUVs2[ b ].clone(), tempUVs2[ c ].clone() ] )
+		if uvs != nil {
 
-        }
+			geo.faceVertexUvs[0] = append(geo.FaceVertexUVs[0], []*math3.Vector2{tempUVs[a].clone(), tempUVs[b].clone(), tempUVs[c].clone()})
 
-    }
+		}
 
-    var groups = srcGeo.groups
+		if uvs2 != nil {
 
-    if ( groups.length > 0 ) {
+			geo.faceVertexUvs[1] = append(geo.FaceVertexUVs[1], []*math3.Vector2{tempUVs2[a].clone(), tempUVs2[b].clone(), tempUVs2[c].clone()})
 
-        for ( var i = 0 i < groups.length i ++ ) {
+		}
 
-            var group = groups[ i ]
+	}
 
-            var start = group.start
-            var count = group.count
+	groups := srcGeo.groups
 
-            for ( var j = start, jl = start + count j < jl j += 3 ) {
+	if len(groups) > 0 {
 
-                if ( indices !== undefined ) {
+		for i := 0; i < len(groups); i++ {
 
-                    addFace( indices[ j ], indices[ j + 1 ], indices[ j + 2 ], group.materialIndex )
+			group := groups[i]
 
-                } else {
+			start := group.Start
+			count := group.Count
 
-                    addFace( j, j + 1, j + 2, group.materialIndex )
+			for j, jl := start, start+count; j < jl; j += 3 {
 
-                }
+				if indices != nil {
 
-            }
+					addFace(indices[j], indices[j+1], indices[j+2], group.materialIndex)
 
-        }
+				} else {
 
-    } else {
+					addFace(j, j+1, j+2, group.materialIndex)
 
-        if ( indices !== undefined ) {
+				}
 
-            for ( var i = 0 i < indices.length i += 3 ) {
+			}
 
-                addFace( indices[ i ], indices[ i + 1 ], indices[ i + 2 ] )
+		}
 
-            }
+	} else {
 
-        } else {
+		if indices != nil {
 
-            for ( var i = 0 i < positions.length / 3 i += 3 ) {
+			for i := 0; i < len(indices); i += 3 {
 
-                addFace( i, i + 1, i + 2 )
+				addFace(indices[i], indices[i+1], indices[i+2], -1)
 
-            }
+			}
 
-        }
+		} else {
 
-    }
+			for i := 0; i < len(positions)/3; i += 3 {
 
-    this.computeFaceNormals()
+				addFace(i, i+1, i+2, -1)
 
-    if ( srcGeo.boundingBox !== nil ) {
+			}
 
-        this.boundingBox = srcGeo.boundingBox.clone()
+		}
 
-    }
+	}
 
-    if ( srcGeo.boundingSphere !== nil ) {
+	geo.ComputeFaceNormals()
 
-        this.boundingSphere = srcGeo.boundingSphere.clone()
+	if srcGeo.BoundingBox != nil {
 
-    }
+		geo.BoundingBox = srcGeo.BoundingBox.clone()
 
-    return this
+	}
+
+	if srcGeo.BoundingSphere != nil {
+
+		this.BoundingSphere = srcGeo.BoundingSphere.clone()
+
+	}
+
+	return geo
 
 }
 
@@ -386,7 +411,7 @@ func (geo *Geometry) FromBufferGeometry(srcGeo *BufferGeometry) {
 
     var offset = this.boundingBox.getCenter().negate()
 
-    this.translate( offset.x, offset.y, offset.z )
+    this.translate(offset.x, offset.y, offset.z)
 
     return offset
 
@@ -407,9 +432,9 @@ func (geo *Geometry) FromBufferGeometry(srcGeo *BufferGeometry) {
         0, s, 0, - s * center.y,
         0, 0, s, - s * center.z,
         0, 0, 0, 1
-    )
+   )
 
-    this.applyMatrix( matrix )
+    this.applyMatrix(matrix)
 
     return this
 
@@ -419,41 +444,41 @@ func (geo *Geometry) FromBufferGeometry(srcGeo *BufferGeometry) {
 
     var cb = new Vector3(), ab = new Vector3()
 
-    for ( var f = 0, fl = this.faces.length f < fl f ++ ) {
+    for (var f = 0, fl = this.faces.length f < fl f ++) {
 
-        var face = this.faces[ f ]
+        var face = this.faces[f]
 
-        var vA = this.vertices[ face.a ]
-        var vB = this.vertices[ face.b ]
-        var vC = this.vertices[ face.c ]
+        var vA = this.vertices[face.a]
+        var vB = this.vertices[face.b]
+        var vC = this.vertices[face.c]
 
-        cb.subVectors( vC, vB )
-        ab.subVectors( vA, vB )
-        cb.cross( ab )
+        cb.subVectors(vC, vB)
+        ab.subVectors(vA, vB)
+        cb.cross(ab)
 
         cb.normalize()
 
-        face.normal.copy( cb )
+        face.normal.copy(cb)
 
     }
 
 },*/
 
-/*computeVertexNormals: function ( areaWeighted ) {
+/*computeVertexNormals: function (areaWeighted) {
 
-    if ( areaWeighted === undefined ) areaWeighted = true
+    if (areaWeighted === nil) areaWeighted = true
 
     var v, vl, f, fl, face, vertices
 
-    vertices = new Array( this.vertices.length )
+    vertices = new Array(this.vertices.length)
 
-    for ( v = 0, vl = this.vertices.length v < vl v ++ ) {
+    for (v = 0, vl = this.vertices.length v < vl v ++) {
 
-        vertices[ v ] = new Vector3()
+        vertices[v] = new Vector3()
 
     }
 
-    if ( areaWeighted ) {
+    if (areaWeighted) {
 
         // vertex normals weighted by triangle areas
         // http://www.iquilezles.org/www/articles/normals/normals.htm
@@ -461,21 +486,21 @@ func (geo *Geometry) FromBufferGeometry(srcGeo *BufferGeometry) {
         var vA, vB, vC
         var cb = new Vector3(), ab = new Vector3()
 
-        for ( f = 0, fl = this.faces.length f < fl f ++ ) {
+        for (f = 0, fl = this.faces.length f < fl f ++) {
 
-            face = this.faces[ f ]
+            face = this.faces[f]
 
-            vA = this.vertices[ face.a ]
-            vB = this.vertices[ face.b ]
-            vC = this.vertices[ face.c ]
+            vA = this.vertices[face.a]
+            vB = this.vertices[face.b]
+            vC = this.vertices[face.c]
 
-            cb.subVectors( vC, vB )
-            ab.subVectors( vA, vB )
-            cb.cross( ab )
+            cb.subVectors(vC, vB)
+            ab.subVectors(vA, vB)
+            cb.cross(ab)
 
-            vertices[ face.a ].add( cb )
-            vertices[ face.b ].add( cb )
-            vertices[ face.c ].add( cb )
+            vertices[face.a].add(cb)
+            vertices[face.b].add(cb)
+            vertices[face.c].add(cb)
 
         }
 
@@ -483,47 +508,47 @@ func (geo *Geometry) FromBufferGeometry(srcGeo *BufferGeometry) {
 
         this.computeFaceNormals()
 
-        for ( f = 0, fl = this.faces.length f < fl f ++ ) {
+        for (f = 0, fl = this.faces.length f < fl f ++) {
 
-            face = this.faces[ f ]
+            face = this.faces[f]
 
-            vertices[ face.a ].add( face.normal )
-            vertices[ face.b ].add( face.normal )
-            vertices[ face.c ].add( face.normal )
+            vertices[face.a].add(face.normal)
+            vertices[face.b].add(face.normal)
+            vertices[face.c].add(face.normal)
 
         }
 
     }
 
-    for ( v = 0, vl = this.vertices.length v < vl v ++ ) {
+    for (v = 0, vl = this.vertices.length v < vl v ++) {
 
-        vertices[ v ].normalize()
+        vertices[v].normalize()
 
     }
 
-    for ( f = 0, fl = this.faces.length f < fl f ++ ) {
+    for (f = 0, fl = this.faces.length f < fl f ++) {
 
-        face = this.faces[ f ]
+        face = this.faces[f]
 
         var vertexNormals = face.vertexNormals
 
-        if ( vertexNormals.length === 3 ) {
+        if (vertexNormals.length === 3) {
 
-            vertexNormals[ 0 ].copy( vertices[ face.a ] )
-            vertexNormals[ 1 ].copy( vertices[ face.b ] )
-            vertexNormals[ 2 ].copy( vertices[ face.c ] )
+            vertexNormals[0].copy(vertices[face.a])
+            vertexNormals[1].copy(vertices[face.b])
+            vertexNormals[2].copy(vertices[face.c])
 
         } else {
 
-            vertexNormals[ 0 ] = vertices[ face.a ].clone()
-            vertexNormals[ 1 ] = vertices[ face.b ].clone()
-            vertexNormals[ 2 ] = vertices[ face.c ].clone()
+            vertexNormals[0] = vertices[face.a].clone()
+            vertexNormals[1] = vertices[face.b].clone()
+            vertexNormals[2] = vertices[face.c].clone()
 
         }
 
     }
 
-    if ( this.faces.length > 0 ) {
+    if (this.faces.length > 0) {
 
         this.normalsNeedUpdate = true
 
@@ -537,29 +562,29 @@ computeFlatVertexNormals: function () {
 
     this.computeFaceNormals()
 
-    for ( f = 0, fl = this.faces.length f < fl f ++ ) {
+    for (f = 0, fl = this.faces.length f < fl f ++) {
 
-        face = this.faces[ f ]
+        face = this.faces[f]
 
         var vertexNormals = face.vertexNormals
 
-        if ( vertexNormals.length === 3 ) {
+        if (vertexNormals.length === 3) {
 
-            vertexNormals[ 0 ].copy( face.normal )
-            vertexNormals[ 1 ].copy( face.normal )
-            vertexNormals[ 2 ].copy( face.normal )
+            vertexNormals[0].copy(face.normal)
+            vertexNormals[1].copy(face.normal)
+            vertexNormals[2].copy(face.normal)
 
         } else {
 
-            vertexNormals[ 0 ] = face.normal.clone()
-            vertexNormals[ 1 ] = face.normal.clone()
-            vertexNormals[ 2 ] = face.normal.clone()
+            vertexNormals[0] = face.normal.clone()
+            vertexNormals[1] = face.normal.clone()
+            vertexNormals[2] = face.normal.clone()
 
         }
 
     }
 
-    if ( this.faces.length > 0 ) {
+    if (this.faces.length > 0) {
 
         this.normalsNeedUpdate = true
 
@@ -575,31 +600,31 @@ computeFlatVertexNormals: function () {
     // - create temp variables on first access
     //   otherwise just copy (for faster repeated calls)
 
-    for ( f = 0, fl = this.faces.length f < fl f ++ ) {
+    for (f = 0, fl = this.faces.length f < fl f ++) {
 
-        face = this.faces[ f ]
+        face = this.faces[f]
 
-        if ( ! face.__originalFaceNormal ) {
+        if (! face.__originalFaceNormal) {
 
             face.__originalFaceNormal = face.normal.clone()
 
         } else {
 
-            face.__originalFaceNormal.copy( face.normal )
+            face.__originalFaceNormal.copy(face.normal)
 
         }
 
-        if ( ! face.__originalVertexNormals ) face.__originalVertexNormals = []
+        if (! face.__originalVertexNormals) face.__originalVertexNormals = []
 
-        for ( i = 0, il = face.vertexNormals.length i < il i ++ ) {
+        for (i = 0, il = face.vertexNormals.length i < il i ++) {
 
-            if ( ! face.__originalVertexNormals[ i ] ) {
+            if (! face.__originalVertexNormals[i]) {
 
-                face.__originalVertexNormals[ i ] = face.vertexNormals[ i ].clone()
+                face.__originalVertexNormals[i] = face.vertexNormals[i].clone()
 
             } else {
 
-                face.__originalVertexNormals[ i ].copy( face.vertexNormals[ i ] )
+                face.__originalVertexNormals[i].copy(face.vertexNormals[i])
 
             }
 
@@ -612,38 +637,38 @@ computeFlatVertexNormals: function () {
     var tmpGeo = new Geometry()
     tmpGeo.faces = this.faces
 
-    for ( i = 0, il = this.morphTargets.length i < il i ++ ) {
+    for (i = 0, il = this.morphTargets.length i < il i ++) {
 
         // create on first access
 
-        if ( ! this.morphNormals[ i ] ) {
+        if (! this.morphNormals[i]) {
 
-            this.morphNormals[ i ] = {}
-            this.morphNormals[ i ].faceNormals = []
-            this.morphNormals[ i ].vertexNormals = []
+            this.morphNormals[i] = {}
+            this.morphNormals[i].faceNormals = []
+            this.morphNormals[i].vertexNormals = []
 
-            var dstNormalsFace = this.morphNormals[ i ].faceNormals
-            var dstNormalsVertex = this.morphNormals[ i ].vertexNormals
+            var dstNormalsFace = this.morphNormals[i].faceNormals
+            var dstNormalsVertex = this.morphNormals[i].vertexNormals
 
             var faceNormal, vertexNormals
 
-            for ( f = 0, fl = this.faces.length f < fl f ++ ) {
+            for (f = 0, fl = this.faces.length f < fl f ++) {
 
                 faceNormal = new Vector3()
                 vertexNormals = { a: new Vector3(), b: new Vector3(), c: new Vector3() }
 
-                dstNormalsFace.push( faceNormal )
-                dstNormalsVertex.push( vertexNormals )
+                dstNormalsFace.push(faceNormal)
+                dstNormalsVertex.push(vertexNormals)
 
             }
 
         }
 
-        var morphNormals = this.morphNormals[ i ]
+        var morphNormals = this.morphNormals[i]
 
         // set vertices to morph target
 
-        tmpGeo.vertices = this.morphTargets[ i ].vertices
+        tmpGeo.vertices = this.morphTargets[i].vertices
 
         // compute morph normals
 
@@ -654,18 +679,18 @@ computeFlatVertexNormals: function () {
 
         var faceNormal, vertexNormals
 
-        for ( f = 0, fl = this.faces.length f < fl f ++ ) {
+        for (f = 0, fl = this.faces.length f < fl f ++) {
 
-            face = this.faces[ f ]
+            face = this.faces[f]
 
-            faceNormal = morphNormals.faceNormals[ f ]
-            vertexNormals = morphNormals.vertexNormals[ f ]
+            faceNormal = morphNormals.faceNormals[f]
+            vertexNormals = morphNormals.vertexNormals[f]
 
-            faceNormal.copy( face.normal )
+            faceNormal.copy(face.normal)
 
-            vertexNormals.a.copy( face.vertexNormals[ 0 ] )
-            vertexNormals.b.copy( face.vertexNormals[ 1 ] )
-            vertexNormals.c.copy( face.vertexNormals[ 2 ] )
+            vertexNormals.a.copy(face.vertexNormals[0])
+            vertexNormals.b.copy(face.vertexNormals[1])
+            vertexNormals.c.copy(face.vertexNormals[2])
 
         }
 
@@ -673,9 +698,9 @@ computeFlatVertexNormals: function () {
 
     // restore original normals
 
-    for ( f = 0, fl = this.faces.length f < fl f ++ ) {
+    for (f = 0, fl = this.faces.length f < fl f ++) {
 
-        face = this.faces[ f ]
+        face = this.faces[f]
 
         face.normal = face.__originalFaceNormal
         face.vertexNormals = face.__originalVertexNormals
@@ -689,15 +714,15 @@ computeLineDistances: function () {
     var d = 0
     var vertices = this.vertices
 
-    for ( var i = 0, il = vertices.length i < il i ++ ) {
+    for (var i = 0, il = vertices.length i < il i ++) {
 
-        if ( i > 0 ) {
+        if (i > 0) {
 
-            d += vertices[ i ].distanceTo( vertices[ i - 1 ] )
+            d += vertices[i].distanceTo(vertices[i - 1])
 
         }
 
-        this.lineDistances[ i ] = d
+        this.lineDistances[i] = d
 
     }
 
@@ -705,33 +730,33 @@ computeLineDistances: function () {
 */
 /*computeBoundingBox: function () {
 
-    if ( this.boundingBox === nil ) {
+    if (this.boundingBox === nil) {
 
         this.boundingBox = new Box3()
 
     }
 
-    this.boundingBox.setFromPoints( this.vertices )
+    this.boundingBox.setFromPoints(this.vertices)
 
 },
 
 computeBoundingSphere: function () {
 
-    if ( this.boundingSphere === nil ) {
+    if (this.boundingSphere === nil) {
 
         this.boundingSphere = new Sphere()
 
     }
 
-    this.boundingSphere.setFromPoints( this.vertices )
+    this.boundingSphere.setFromPoints(this.vertices)
 
 },*/
 
-/*merge: function ( geometry, matrix, materialIndexOffset ) {
+/*merge: function (geometry, matrix, materialIndexOffset) {
 
-    if ( ( geometry && geometry.isGeometry ) === false ) {
+    if ((geometry && geometry.isGeometry) === false) {
 
-        console.error( 'THREE.Geometry.merge(): geometry not an instance of THREE.Geometry.', geometry )
+        console.error('THREE.Geometry.merge(): geometry not an instance of THREE.Geometry.', geometry)
         return
 
     }
@@ -742,123 +767,123 @@ computeBoundingSphere: function () {
         vertices2 = geometry.vertices,
         faces1 = this.faces,
         faces2 = geometry.faces,
-        uvs1 = this.faceVertexUvs[ 0 ],
-        uvs2 = geometry.faceVertexUvs[ 0 ],
+        uvs1 = this.faceVertexUvs[0],
+        uvs2 = geometry.faceVertexUvs[0],
         colors1 = this.colors,
         colors2 = geometry.colors
 
-    if ( materialIndexOffset === undefined ) materialIndexOffset = 0
+    if (materialIndexOffset === nil) materialIndexOffset = 0
 
-    if ( matrix !== undefined ) {
+    if (matrix != nil) {
 
-        normalMatrix = new Matrix3().getNormalMatrix( matrix )
+        normalMatrix = new Matrix3().getNormalMatrix(matrix)
 
     }
 
     // vertices
 
-    for ( var i = 0, il = vertices2.length i < il i ++ ) {
+    for (var i = 0, il = vertices2.length i < il i ++) {
 
-        var vertex = vertices2[ i ]
+        var vertex = vertices2[i]
 
         var vertexCopy = vertex.clone()
 
-        if ( matrix !== undefined ) vertexCopy.applyMatrix4( matrix )
+        if (matrix != nil) vertexCopy.applyMatrix4(matrix)
 
-        vertices1.push( vertexCopy )
+        vertices1.push(vertexCopy)
 
     }
 
     // colors
 
-    for ( var i = 0, il = colors2.length i < il i ++ ) {
+    for (var i = 0, il = colors2.length i < il i ++) {
 
-        colors1.push( colors2[ i ].clone() )
+        colors1.push(colors2[i].clone())
 
     }
 
     // faces
 
-    for ( i = 0, il = faces2.length i < il i ++ ) {
+    for (i = 0, il = faces2.length i < il i ++) {
 
-        var face = faces2[ i ], faceCopy, normal, color,
+        var face = faces2[i], faceCopy, normal, color,
             faceVertexNormals = face.vertexNormals,
             faceVertexColors = face.vertexColors
 
-        faceCopy = new Face3( face.a + vertexOffset, face.b + vertexOffset, face.c + vertexOffset )
-        faceCopy.normal.copy( face.normal )
+        faceCopy = new Face3(face.a + vertexOffset, face.b + vertexOffset, face.c + vertexOffset)
+        faceCopy.normal.copy(face.normal)
 
-        if ( normalMatrix !== undefined ) {
+        if (normalMatrix != nil) {
 
-            faceCopy.normal.applyMatrix3( normalMatrix ).normalize()
+            faceCopy.normal.applyMatrix3(normalMatrix).normalize()
 
         }
 
-        for ( var j = 0, jl = faceVertexNormals.length j < jl j ++ ) {
+        for (var j = 0, jl = faceVertexNormals.length j < jl j ++) {
 
-            normal = faceVertexNormals[ j ].clone()
+            normal = faceVertexNormals[j].clone()
 
-            if ( normalMatrix !== undefined ) {
+            if (normalMatrix != nil) {
 
-                normal.applyMatrix3( normalMatrix ).normalize()
+                normal.applyMatrix3(normalMatrix).normalize()
 
             }
 
-            faceCopy.vertexNormals.push( normal )
+            faceCopy.vertexNormals.push(normal)
 
         }
 
-        faceCopy.color.copy( face.color )
+        faceCopy.color.copy(face.color)
 
-        for ( var j = 0, jl = faceVertexColors.length j < jl j ++ ) {
+        for (var j = 0, jl = faceVertexColors.length j < jl j ++) {
 
-            color = faceVertexColors[ j ]
-            faceCopy.vertexColors.push( color.clone() )
+            color = faceVertexColors[j]
+            faceCopy.vertexColors.push(color.clone())
 
         }
 
         faceCopy.materialIndex = face.materialIndex + materialIndexOffset
 
-        faces1.push( faceCopy )
+        faces1.push(faceCopy)
 
     }
 
     // uvs
 
-    for ( i = 0, il = uvs2.length i < il i ++ ) {
+    for (i = 0, il = uvs2.length i < il i ++) {
 
-        var uv = uvs2[ i ], uvCopy = []
+        var uv = uvs2[i], uvCopy = []
 
-        if ( uv === undefined ) {
+        if (uv === nil) {
 
             continue
 
         }
 
-        for ( var j = 0, jl = uv.length j < jl j ++ ) {
+        for (var j = 0, jl = uv.length j < jl j ++) {
 
-            uvCopy.push( uv[ j ].clone() )
+            uvCopy.push(uv[j].clone())
 
         }
 
-        uvs1.push( uvCopy )
+        uvs1.push(uvCopy)
 
     }
 
 },*/
 
-/*mergeMesh: function ( mesh ) {
+/*mergeMesh: function (mesh) {
 
-    if ( ( mesh && mesh.isMesh ) === false ) {
+    if ((mesh && mesh.isMesh) === false) {
 
-        console.error( 'THREE.Geometry.mergeMesh(): mesh not an instance of THREE.Mesh.', mesh )
+        console.error('THREE.Geometry.mergeMesh(): mesh not an instance of THREE.Mesh.', mesh)
         return
 
     }
 
     mesh.matrixAutoUpdate && mesh.updateMatrix()
 
-    this.merge( mesh.geometry, mesh.matrix )
+    this.merge(mesh.geometry, mesh.matrix)
 
 },*/
 
@@ -875,25 +900,25 @@ computeBoundingSphere: function () {
 
     var v, key
     var precisionPoints = 4 // number of decimal points, e.g. 4 for epsilon of 0.0001
-    var precision = Math.pow( 10, precisionPoints )
+    var precision = Math.pow(10, precisionPoints)
     var i, il, face
     var indices, j, jl
 
-    for ( i = 0, il = this.vertices.length i < il i ++ ) {
+    for (i = 0, il = this.vertices.length i < il i ++) {
 
-        v = this.vertices[ i ]
-        key = Math.round( v.x * precision ) + '_' + Math.round( v.y * precision ) + '_' + Math.round( v.z * precision )
+        v = this.vertices[i]
+        key = Math.round(v.x * precision) + '_' + Math.round(v.y * precision) + '_' + Math.round(v.z * precision)
 
-        if ( verticesMap[ key ] === undefined ) {
+        if (verticesMap[key] === nil) {
 
-            verticesMap[ key ] = i
-            unique.push( this.vertices[ i ] )
-            changes[ i ] = unique.length - 1
+            verticesMap[key] = i
+            unique.push(this.vertices[i])
+            changes[i] = unique.length - 1
 
         } else {
 
             //console.log('Duplicate vertex found. ', i, ' could be using ', verticesMap[key])
-            changes[ i ] = changes[ verticesMap[ key ] ]
+            changes[i] = changes[verticesMap[key]]
 
         }
 
@@ -904,23 +929,23 @@ computeBoundingSphere: function () {
     // have to remove them from the geometry.
     var faceIndicesToRemove = []
 
-    for ( i = 0, il = this.faces.length i < il i ++ ) {
+    for (i = 0, il = this.faces.length i < il i ++) {
 
-        face = this.faces[ i ]
+        face = this.faces[i]
 
-        face.a = changes[ face.a ]
-        face.b = changes[ face.b ]
-        face.c = changes[ face.c ]
+        face.a = changes[face.a]
+        face.b = changes[face.b]
+        face.c = changes[face.c]
 
-        indices = [ face.a, face.b, face.c ]
+        indices = [face.a, face.b, face.c]
 
         // if any duplicate vertices are found in a Face3
         // we have to remove the face as nothing can be saved
-        for ( var n = 0 n < 3 n ++ ) {
+        for (var n = 0 n < 3 n ++) {
 
-            if ( indices[ n ] === indices[ ( n + 1 ) % 3 ] ) {
+            if (indices[n] === indices[(n + 1) % 3]) {
 
-                faceIndicesToRemove.push( i )
+                faceIndicesToRemove.push(i)
                 break
 
             }
@@ -929,15 +954,15 @@ computeBoundingSphere: function () {
 
     }
 
-    for ( i = faceIndicesToRemove.length - 1 i >= 0 i -- ) {
+    for (i = faceIndicesToRemove.length - 1 i >= 0 i --) {
 
-        var idx = faceIndicesToRemove[ i ]
+        var idx = faceIndicesToRemove[i]
 
-        this.faces.splice( idx, 1 )
+        this.faces.splice(idx, 1)
 
-        for ( j = 0, jl = this.faceVertexUvs.length j < jl j ++ ) {
+        for (j = 0, jl = this.faceVertexUvs.length j < jl j ++) {
 
-            this.faceVertexUvs[ j ].splice( idx, 1 )
+            this.faceVertexUvs[j].splice(idx, 1)
 
         }
 
@@ -958,43 +983,43 @@ computeBoundingSphere: function () {
 
     // tag faces
 
-    for ( var i = 0 i < length i ++ ) {
+    for (var i = 0 i < length i ++) {
 
-        faces[ i ]._id = i
+        faces[i]._id = i
 
     }
 
     // sort faces
 
-    function materialIndexSort( a, b ) {
+    function materialIndexSort(a, b) {
 
         return a.materialIndex - b.materialIndex
 
     }
 
-    faces.sort( materialIndexSort )
+    faces.sort(materialIndexSort)
 
     // sort uvs
 
-    var uvs1 = this.faceVertexUvs[ 0 ]
-    var uvs2 = this.faceVertexUvs[ 1 ]
+    var uvs1 = this.faceVertexUvs[0]
+    var uvs2 = this.faceVertexUvs[1]
 
     var newUvs1, newUvs2
 
-    if ( uvs1 && uvs1.length === length ) newUvs1 = []
-    if ( uvs2 && uvs2.length === length ) newUvs2 = []
+    if (uvs1 && uvs1.length === length) newUvs1 = []
+    if (uvs2 && uvs2.length === length) newUvs2 = []
 
-    for ( var i = 0 i < length i ++ ) {
+    for (var i = 0 i < length i ++) {
 
-        var id = faces[ i ]._id
+        var id = faces[i]._id
 
-        if ( newUvs1 ) newUvs1.push( uvs1[ id ] )
-        if ( newUvs2 ) newUvs2.push( uvs2[ id ] )
+        if (newUvs1) newUvs1.push(uvs1[id])
+        if (newUvs2) newUvs2.push(uvs2[id])
 
     }
 
-    if ( newUvs1 ) this.faceVertexUvs[ 0 ] = newUvs1
-    if ( newUvs2 ) this.faceVertexUvs[ 1 ] = newUvs2
+    if (newUvs1) this.faceVertexUvs[0] = newUvs1
+    if (newUvs2) this.faceVertexUvs[1] = newUvs2
 
 },
 
@@ -1012,15 +1037,15 @@ toJSON: function () {
 
     data.uuid = this.uuid
     data.type = this.type
-    if ( this.name !== '' ) data.name = this.name
+    if (this.name != '') data.name = this.name
 
-    if ( this.parameters !== undefined ) {
+    if (this.parameters != nil) {
 
         var parameters = this.parameters
 
-        for ( var key in parameters ) {
+        for (var key in parameters) {
 
-            if ( parameters[ key ] !== undefined ) data[ key ] = parameters[ key ]
+            if (parameters[key] != nil) data[key] = parameters[key]
 
         }
 
@@ -1030,10 +1055,10 @@ toJSON: function () {
 
     var vertices = []
 
-    for ( var i = 0 i < this.vertices.length i ++ ) {
+    for (var i = 0 i < this.vertices.length i ++) {
 
-        var vertex = this.vertices[ i ]
-        vertices.push( vertex.x, vertex.y, vertex.z )
+        var vertex = this.vertices[i]
+        vertices.push(vertex.x, vertex.y, vertex.z)
 
     }
 
@@ -1045,137 +1070,137 @@ toJSON: function () {
     var uvs = []
     var uvsHash = {}
 
-    for ( var i = 0 i < this.faces.length i ++ ) {
+    for (var i = 0 i < this.faces.length i ++) {
 
-        var face = this.faces[ i ]
+        var face = this.faces[i]
 
         var hasMaterial = true
         var hasFaceUv = false // deprecated
-        var hasFaceVertexUv = this.faceVertexUvs[ 0 ][ i ] !== undefined
+        var hasFaceVertexUv = this.faceVertexUvs[0][i] != nil
         var hasFaceNormal = face.normal.length() > 0
         var hasFaceVertexNormal = face.vertexNormals.length > 0
-        var hasFaceColor = face.color.r !== 1 || face.color.g !== 1 || face.color.b !== 1
+        var hasFaceColor = face.color.r != 1 || face.color.g != 1 || face.color.b != 1
         var hasFaceVertexColor = face.vertexColors.length > 0
 
         var faceType = 0
 
-        faceType = setBit( faceType, 0, 0 ) // isQuad
-        faceType = setBit( faceType, 1, hasMaterial )
-        faceType = setBit( faceType, 2, hasFaceUv )
-        faceType = setBit( faceType, 3, hasFaceVertexUv )
-        faceType = setBit( faceType, 4, hasFaceNormal )
-        faceType = setBit( faceType, 5, hasFaceVertexNormal )
-        faceType = setBit( faceType, 6, hasFaceColor )
-        faceType = setBit( faceType, 7, hasFaceVertexColor )
+        faceType = setBit(faceType, 0, 0) // isQuad
+        faceType = setBit(faceType, 1, hasMaterial)
+        faceType = setBit(faceType, 2, hasFaceUv)
+        faceType = setBit(faceType, 3, hasFaceVertexUv)
+        faceType = setBit(faceType, 4, hasFaceNormal)
+        faceType = setBit(faceType, 5, hasFaceVertexNormal)
+        faceType = setBit(faceType, 6, hasFaceColor)
+        faceType = setBit(faceType, 7, hasFaceVertexColor)
 
-        faces.push( faceType )
-        faces.push( face.a, face.b, face.c )
-        faces.push( face.materialIndex )
+        faces.push(faceType)
+        faces.push(face.a, face.b, face.c)
+        faces.push(face.materialIndex)
 
-        if ( hasFaceVertexUv ) {
+        if (hasFaceVertexUv) {
 
-            var faceVertexUvs = this.faceVertexUvs[ 0 ][ i ]
+            var faceVertexUvs = this.faceVertexUvs[0][i]
 
             faces.push(
-                getUvIndex( faceVertexUvs[ 0 ] ),
-                getUvIndex( faceVertexUvs[ 1 ] ),
-                getUvIndex( faceVertexUvs[ 2 ] )
-            )
+                getUvIndex(faceVertexUvs[0]),
+                getUvIndex(faceVertexUvs[1]),
+                getUvIndex(faceVertexUvs[2])
+           )
 
         }
 
-        if ( hasFaceNormal ) {
+        if (hasFaceNormal) {
 
-            faces.push( getNormalIndex( face.normal ) )
+            faces.push(getNormalIndex(face.normal))
 
         }
 
-        if ( hasFaceVertexNormal ) {
+        if (hasFaceVertexNormal) {
 
             var vertexNormals = face.vertexNormals
 
             faces.push(
-                getNormalIndex( vertexNormals[ 0 ] ),
-                getNormalIndex( vertexNormals[ 1 ] ),
-                getNormalIndex( vertexNormals[ 2 ] )
-            )
+                getNormalIndex(vertexNormals[0]),
+                getNormalIndex(vertexNormals[1]),
+                getNormalIndex(vertexNormals[2])
+           )
 
         }
 
-        if ( hasFaceColor ) {
+        if (hasFaceColor) {
 
-            faces.push( getColorIndex( face.color ) )
+            faces.push(getColorIndex(face.color))
 
         }
 
-        if ( hasFaceVertexColor ) {
+        if (hasFaceVertexColor) {
 
             var vertexColors = face.vertexColors
 
             faces.push(
-                getColorIndex( vertexColors[ 0 ] ),
-                getColorIndex( vertexColors[ 1 ] ),
-                getColorIndex( vertexColors[ 2 ] )
-            )
+                getColorIndex(vertexColors[0]),
+                getColorIndex(vertexColors[1]),
+                getColorIndex(vertexColors[2])
+           )
 
         }
 
     }
 
-    function setBit( value, position, enabled ) {
+    function setBit(value, position, enabled) {
 
-        return enabled ? value | ( 1 << position ) : value & ( ~ ( 1 << position ) )
+        return enabled ? value | (1 << position) : value & (~ (1 << position))
 
     }
 
-    function getNormalIndex( normal ) {
+    function getNormalIndex(normal) {
 
         var hash = normal.x.toString() + normal.y.toString() + normal.z.toString()
 
-        if ( normalsHash[ hash ] !== undefined ) {
+        if (normalsHash[hash] != nil) {
 
-            return normalsHash[ hash ]
+            return normalsHash[hash]
 
         }
 
-        normalsHash[ hash ] = normals.length / 3
-        normals.push( normal.x, normal.y, normal.z )
+        normalsHash[hash] = normals.length / 3
+        normals.push(normal.x, normal.y, normal.z)
 
-        return normalsHash[ hash ]
+        return normalsHash[hash]
 
     }
 
-    function getColorIndex( color ) {
+    function getColorIndex(color) {
 
         var hash = color.r.toString() + color.g.toString() + color.b.toString()
 
-        if ( colorsHash[ hash ] !== undefined ) {
+        if (colorsHash[hash] != nil) {
 
-            return colorsHash[ hash ]
+            return colorsHash[hash]
 
         }
 
-        colorsHash[ hash ] = colors.length
-        colors.push( color.getHex() )
+        colorsHash[hash] = colors.length
+        colors.push(color.getHex())
 
-        return colorsHash[ hash ]
+        return colorsHash[hash]
 
     }
 
-    function getUvIndex( uv ) {
+    function getUvIndex(uv) {
 
         var hash = uv.x.toString() + uv.y.toString()
 
-        if ( uvsHash[ hash ] !== undefined ) {
+        if (uvsHash[hash] != nil) {
 
-            return uvsHash[ hash ]
+            return uvsHash[hash]
 
         }
 
-        uvsHash[ hash ] = uvs.length / 2
-        uvs.push( uv.x, uv.y )
+        uvsHash[hash] = uvs.length / 2
+        uvs.push(uv.x, uv.y)
 
-        return uvsHash[ hash ]
+        return uvsHash[hash]
 
     }
 
@@ -1183,8 +1208,8 @@ toJSON: function () {
 
     data.data.vertices = vertices
     data.data.normals = normals
-    if ( colors.length > 0 ) data.data.colors = colors
-    if ( uvs.length > 0 ) data.data.uvs = [ uvs ] // temporal backward compatibility
+    if (colors.length > 0) data.data.colors = colors
+    if (uvs.length > 0) data.data.uvs = [uvs] // temporal backward compatibility
     data.data.faces = faces
 
     return data
@@ -1198,30 +1223,30 @@ toJSON: function () {
 
  var parameters = this.parameters
 
- if ( parameters !== undefined ) {
+ if (parameters != nil) {
 
  var values = []
 
- for ( var key in parameters ) {
+ for (var key in parameters) {
 
- values.push( parameters[ key ] )
+ values.push(parameters[key])
 
  }
 
- var geometry = Object.create( this.constructor.prototype )
- this.constructor.apply( geometry, values )
+ var geometry = Object.create(this.constructor.prototype)
+ this.constructor.apply(geometry, values)
  return geometry
 
  }
 
- return new this.constructor().copy( this )
+ return new this.constructor().copy(this)
 
 
-return new Geometry().copy( this )*/
+return new Geometry().copy(this)*/
 
 //},
 
-/*copy: function ( source ) {
+/*copy: function (source) {
 
     var i, il, j, jl, k, kl
 
@@ -1247,9 +1272,9 @@ return new Geometry().copy( this )*/
 
     var vertices = source.vertices
 
-    for ( i = 0, il = vertices.length i < il i ++ ) {
+    for (i = 0, il = vertices.length i < il i ++) {
 
-        this.vertices.push( vertices[ i ].clone() )
+        this.vertices.push(vertices[i].clone())
 
     }
 
@@ -1257,9 +1282,9 @@ return new Geometry().copy( this )*/
 
     var colors = source.colors
 
-    for ( i = 0, il = colors.length i < il i ++ ) {
+    for (i = 0, il = colors.length i < il i ++) {
 
-        this.colors.push( colors[ i ].clone() )
+        this.colors.push(colors[i].clone())
 
     }
 
@@ -1267,37 +1292,37 @@ return new Geometry().copy( this )*/
 
     var faces = source.faces
 
-    for ( i = 0, il = faces.length i < il i ++ ) {
+    for (i = 0, il = faces.length i < il i ++) {
 
-        this.faces.push( faces[ i ].clone() )
+        this.faces.push(faces[i].clone())
 
     }
 
     // face vertex uvs
 
-    for ( i = 0, il = source.faceVertexUvs.length i < il i ++ ) {
+    for (i = 0, il = source.faceVertexUvs.length i < il i ++) {
 
-        var faceVertexUvs = source.faceVertexUvs[ i ]
+        var faceVertexUvs = source.faceVertexUvs[i]
 
-        if ( this.faceVertexUvs[ i ] === undefined ) {
+        if (this.faceVertexUvs[i] === nil) {
 
-            this.faceVertexUvs[ i ] = []
+            this.faceVertexUvs[i] = []
 
         }
 
-        for ( j = 0, jl = faceVertexUvs.length j < jl j ++ ) {
+        for (j = 0, jl = faceVertexUvs.length j < jl j ++) {
 
-            var uvs = faceVertexUvs[ j ], uvsCopy = []
+            var uvs = faceVertexUvs[j], uvsCopy = []
 
-            for ( k = 0, kl = uvs.length k < kl k ++ ) {
+            for (k = 0, kl = uvs.length k < kl k ++) {
 
-                var uv = uvs[ k ]
+                var uv = uvs[k]
 
-                uvsCopy.push( uv.clone() )
+                uvsCopy.push(uv.clone())
 
             }
 
-            this.faceVertexUvs[ i ].push( uvsCopy )
+            this.faceVertexUvs[i].push(uvsCopy)
 
         }
 
@@ -1307,20 +1332,20 @@ return new Geometry().copy( this )*/
 
     var morphTargets = source.morphTargets
 
-    for ( i = 0, il = morphTargets.length i < il i ++ ) {
+    for (i = 0, il = morphTargets.length i < il i ++) {
 
         var morphTarget = {}
-        morphTarget.name = morphTargets[ i ].name
+        morphTarget.name = morphTargets[i].name
 
         // vertices
 
-        if ( morphTargets[ i ].vertices !== undefined ) {
+        if (morphTargets[i].vertices != nil) {
 
             morphTarget.vertices = []
 
-            for ( j = 0, jl = morphTargets[ i ].vertices.length j < jl j ++ ) {
+            for (j = 0, jl = morphTargets[i].vertices.length j < jl j ++) {
 
-                morphTarget.vertices.push( morphTargets[ i ].vertices[ j ].clone() )
+                morphTarget.vertices.push(morphTargets[i].vertices[j].clone())
 
             }
 
@@ -1328,19 +1353,19 @@ return new Geometry().copy( this )*/
 
         // normals
 
-        if ( morphTargets[ i ].normals !== undefined ) {
+        if (morphTargets[i].normals != nil) {
 
             morphTarget.normals = []
 
-            for ( j = 0, jl = morphTargets[ i ].normals.length j < jl j ++ ) {
+            for (j = 0, jl = morphTargets[i].normals.length j < jl j ++) {
 
-                morphTarget.normals.push( morphTargets[ i ].normals[ j ].clone() )
+                morphTarget.normals.push(morphTargets[i].normals[j].clone())
 
             }
 
         }
 
-        this.morphTargets.push( morphTarget )
+        this.morphTargets.push(morphTarget)
 
     }
 
@@ -1348,26 +1373,26 @@ return new Geometry().copy( this )*/
 
     var morphNormals = source.morphNormals
 
-    for ( i = 0, il = morphNormals.length i < il i ++ ) {
+    for (i = 0, il = morphNormals.length i < il i ++) {
 
         var morphNormal = {}
 
         // vertex normals
 
-        if ( morphNormals[ i ].vertexNormals !== undefined ) {
+        if (morphNormals[i].vertexNormals != nil) {
 
             morphNormal.vertexNormals = []
 
-            for ( j = 0, jl = morphNormals[ i ].vertexNormals.length j < jl j ++ ) {
+            for (j = 0, jl = morphNormals[i].vertexNormals.length j < jl j ++) {
 
-                var srcVertexNormal = morphNormals[ i ].vertexNormals[ j ]
+                var srcVertexNormal = morphNormals[i].vertexNormals[j]
                 var destVertexNormal = {}
 
                 destVertexNormal.a = srcVertexNormal.a.clone()
                 destVertexNormal.b = srcVertexNormal.b.clone()
                 destVertexNormal.c = srcVertexNormal.c.clone()
 
-                morphNormal.vertexNormals.push( destVertexNormal )
+                morphNormal.vertexNormals.push(destVertexNormal)
 
             }
 
@@ -1375,19 +1400,19 @@ return new Geometry().copy( this )*/
 
         // face normals
 
-        if ( morphNormals[ i ].faceNormals !== undefined ) {
+        if (morphNormals[i].faceNormals != nil) {
 
             morphNormal.faceNormals = []
 
-            for ( j = 0, jl = morphNormals[ i ].faceNormals.length j < jl j ++ ) {
+            for (j = 0, jl = morphNormals[i].faceNormals.length j < jl j ++) {
 
-                morphNormal.faceNormals.push( morphNormals[ i ].faceNormals[ j ].clone() )
+                morphNormal.faceNormals.push(morphNormals[i].faceNormals[j].clone())
 
             }
 
         }
 
-        this.morphNormals.push( morphNormal )
+        this.morphNormals.push(morphNormal)
 
     }
 
@@ -1395,9 +1420,9 @@ return new Geometry().copy( this )*/
 
     var skinWeights = source.skinWeights
 
-    for ( i = 0, il = skinWeights.length i < il i ++ ) {
+    for (i = 0, il = skinWeights.length i < il i ++) {
 
-        this.skinWeights.push( skinWeights[ i ].clone() )
+        this.skinWeights.push(skinWeights[i].clone())
 
     }
 
@@ -1405,9 +1430,9 @@ return new Geometry().copy( this )*/
 
     var skinIndices = source.skinIndices
 
-    for ( i = 0, il = skinIndices.length i < il i ++ ) {
+    for (i = 0, il = skinIndices.length i < il i ++) {
 
-        this.skinIndices.push( skinIndices[ i ].clone() )
+        this.skinIndices.push(skinIndices[i].clone())
 
     }
 
@@ -1415,9 +1440,9 @@ return new Geometry().copy( this )*/
 
     var lineDistances = source.lineDistances
 
-    for ( i = 0, il = lineDistances.length i < il i ++ ) {
+    for (i = 0, il = lineDistances.length i < il i ++) {
 
-        this.lineDistances.push( lineDistances[ i ] )
+        this.lineDistances.push(lineDistances[i])
 
     }
 
@@ -1425,7 +1450,7 @@ return new Geometry().copy( this )*/
 
     var boundingBox = source.boundingBox
 
-    if ( boundingBox !== nil ) {
+    if (boundingBox != nil) {
 
         this.boundingBox = boundingBox.clone()
 
@@ -1435,7 +1460,7 @@ return new Geometry().copy( this )*/
 
     var boundingSphere = source.boundingSphere
 
-    if ( boundingSphere !== nil ) {
+    if (boundingSphere != nil) {
 
         this.boundingSphere = boundingSphere.clone()
 
@@ -1457,11 +1482,11 @@ return new Geometry().copy( this )*/
 */
 /*dispose: function () {
 
-        this.dispatchEvent( { type: 'dispose' } )
+        this.dispatchEvent({ type: 'dispose' })
 
     }
 
-} )
+})
 
 
 export { GeometryIdCount, Geometry }

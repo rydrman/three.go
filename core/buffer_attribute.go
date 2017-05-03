@@ -6,10 +6,15 @@ package core
 
 import "github.com/rydrman/three.go/math3"
 
+// BufferAttribute stores data for an attribute (such as vertex positions, face indices, normals, colors, UVs,
+// and any custom attributes) associated with a BufferGeometry, which allows for more efficient passing of data
+// to the GPU. See that page for details and a usage example.
+//
+// Data is stored as vectors of any length (defined by itemSize), and in general in the methods outlined below
+// if passing in an index, this is automatically multiplied by the vector length.
 type BufferAttribute struct {
 	UUID string
 
-	Array      []interface{}
 	ItemSize   int
 	Count      int
 	Normalized bool
@@ -18,443 +23,475 @@ type BufferAttribute struct {
 	UpdateRangeOffset int
 	UpdateRangeCount  int
 
+	array            math3.TypeArray
+	needsUpdate      bool
 	onUploadCallback func()
 
 	Version int
 }
 
-func NewBufferGeometry(array []interface{}, itemSize int, normalized bool) *BufferAttribute {
+func newBufferAttribute(array math3.TypeArray, itemSize int, normalized bool) *BufferAttribute {
 
-	return &BufferAttribute{
+	attr := &BufferAttribute{
 
 		UUID: math3.GenerateUUID(),
 
-		Array:      array,
 		ItemSize:   itemSize,
-		Count:      len(array),
 		Normalized: normalized,
 
 		Dynamic:           false,
 		UpdateRangeOffset: 0,
 		UpdateRangeCount:  -1,
 
+		needsUpdate:      true,
 		onUploadCallback: nil,
 
 		Version: 0,
 	}
 
+	attr.SetArray(array)
+	return attr
+
 }
 
-/*Object.defineProperty( BufferAttribute.prototype, 'needsUpdate', {
+func (attr *BufferAttribute) NeedsUpdate() bool {
 
-	func (attr *BufferAttribute) Set( value ) {
+	return attr.needsUpdate
 
-		if ( value === true ) attr.Version ++;
+}
+
+func (attr *BufferAttribute) SetNeedsUpdate(value bool) {
+
+	if value {
+		attr.Version++
+	}
+	attr.needsUpdate = value
+
+}
+
+func (attr *BufferAttribute) Array() math3.TypeArray {
+
+	return attr.array
+
+}
+
+func (attr *BufferAttribute) SetArray(array math3.TypeArray) {
+
+	attr.array = array
+
+	switch array.(type) := arr {
+
+		case Int8Array:
+			attr.Count = len(arr) / itemSize
+			break
+
+		case Uint8Array:
+			attr.Count = len(arr) / itemSize
+			break
+
+		case Int16Array:
+			attr.Count = len(arr) / itemSize
+			break
+
+		case Uint16Array:
+			attr.Count = len(arr) / itemSize
+			break
+
+		case Int32Array:
+			attr.Count = len(arr) / itemSize
+			break
+
+		case Uint32Array:
+			attr.Count = len(arr) / itemSize
+			break
+
+		case Float32Array:
+			attr.Count = len(arr) / itemSize
+			break
+
+		case Float64Array:
+			attr.Count = len(arr) / itemSize
+			break
+
+		default:
+			glog.Fatalln("three/core/BufferAttribute.SetArray must be passed one of math3.Int8Array, math3.Uint8Array, " + 
+				"math3.Int16Array, math3.Uint16Array, math3.Int32Array, math3.Uint32Array, " + 
+				"math3.Float32Array, math3.Float64Array")
 
 	}
 
-} );
+}
 
-Object.assign( BufferAttribute.prototype, {
+func (attr *BufferAttribute) Copy(source *BufferAttribute) {
 
-	isBufferAttribute: true,
+	attr.array = make([]interface{}, len(source.array))
+	copy(source.array, attr.array)
+	attr.ItemSize = source.ItemSize
+	attr.Count = source.Count
+	attr.Normalized = source.Normalized
 
-	func (attr *BufferAttribute) SetArray( array ) {
+	attr.Dynamic = source.Dynamic
 
-		if ( Array.isArray( array ) ) {
+}
 
-			throw new TypeError( 'THREE.BufferAttribute: array should be a Typed Array.' );
+func (attr *BufferAttribute) CopyAt(index1 int, attribute *BufferAttribute, index2 int) {
 
-		}
+	index1 *= attr.ItemSize
+	index2 *= attribute.itemSize
 
-		attr.Count = array !== undefined ? array.length / attr.ItemSize : 0;
-		attr.Array = array;
+	for i := 0; i < attr.ItemSize; i++ {
 
-	},
-
-	func (attr *BufferAttribute) SetDynamic( value ) {
-
-		attr.Dynamic = value;
-
-		return this;
-
-	},
-
-	func (attr *BufferAttribute) Copy( source ) {
-
-		attr.Array = new source.array.constructor( source.array );
-		attr.ItemSize = source.itemSize;
-		attr.Count = source.count;
-		attr.Normalized = source.normalized;
-
-		attr.Dynamic = source.dynamic;
-
-		return this;
-
-	},
-
-	func (attr *BufferAttribute) CopyAt( index1, attribute, index2 ) {
-
-		index1 *= attr.ItemSize;
-		index2 *= attribute.itemSize;
-
-		for ( var i = 0, l = attr.ItemSize; i < l; i ++ ) {
-
-			attr.Array[ index1 + i ] = attribute.array[ index2 + i ];
-
-		}
-
-		return this;
-
-	},
-
-	func (attr *BufferAttribute) CopyArray( array ) {
-
-		attr.Array.set( array );
-
-		return this;
-
-	},
-
-	func (attr *BufferAttribute) CopyColorsArray( colors ) {
-
-		var array = attr.Array, offset = 0;
-
-		for ( var i = 0, l = colors.length; i < l; i ++ ) {
-
-			var color = colors[ i ];
-
-			if ( color === undefined ) {
-
-				console.warn( 'THREE.BufferAttribute.copyColorsArray(): color is undefined', i );
-				color = new Color();
-
-			}
-
-			array[ offset ++ ] = color.r;
-			array[ offset ++ ] = color.g;
-			array[ offset ++ ] = color.b;
-
-		}
-
-		return this;
-
-	},
-
-	func (attr *BufferAttribute) CopyIndicesArray( indices ) {
-
-		var array = attr.Array, offset = 0;
-
-		for ( var i = 0, l = indices.length; i < l; i ++ ) {
-
-			var index = indices[ i ];
-
-			array[ offset ++ ] = index.a;
-			array[ offset ++ ] = index.b;
-			array[ offset ++ ] = index.c;
-
-		}
-
-		return this;
-
-	},
-
-	func (attr *BufferAttribute) CopyVector2sArray( vectors ) {
-
-		var array = attr.Array, offset = 0;
-
-		for ( var i = 0, l = vectors.length; i < l; i ++ ) {
-
-			var vector = vectors[ i ];
-
-			if ( vector === undefined ) {
-
-				console.warn( 'THREE.BufferAttribute.copyVector2sArray(): vector is undefined', i );
-				vector = new Vector2();
-
-			}
-
-			array[ offset ++ ] = vector.x;
-			array[ offset ++ ] = vector.y;
-
-		}
-
-		return this;
-
-	},
-
-	func (attr *BufferAttribute) CopyVector3sArray( vectors ) {
-
-		var array = attr.Array, offset = 0;
-
-		for ( var i = 0, l = vectors.length; i < l; i ++ ) {
-
-			var vector = vectors[ i ];
-
-			if ( vector === undefined ) {
-
-				console.warn( 'THREE.BufferAttribute.copyVector3sArray(): vector is undefined', i );
-				vector = new Vector3();
-
-			}
-
-			array[ offset ++ ] = vector.x;
-			array[ offset ++ ] = vector.y;
-			array[ offset ++ ] = vector.z;
-
-		}
-
-		return this;
-
-	},
-
-	func (attr *BufferAttribute) CopyVector4sArray( vectors ) {
-
-		var array = attr.Array, offset = 0;
-
-		for ( var i = 0, l = vectors.length; i < l; i ++ ) {
-
-			var vector = vectors[ i ];
-
-			if ( vector === undefined ) {
-
-				console.warn( 'THREE.BufferAttribute.copyVector4sArray(): vector is undefined', i );
-				vector = new Vector4();
-
-			}
-
-			array[ offset ++ ] = vector.x;
-			array[ offset ++ ] = vector.y;
-			array[ offset ++ ] = vector.z;
-			array[ offset ++ ] = vector.w;
-
-		}
-
-		return this;
-
-	},
-
-	func (attr *BufferAttribute) Set( value, offset ) {
-
-		if ( offset === undefined ) offset = 0;
-
-		attr.Array.set( value, offset );
-
-		return this;
-
-	},
-
-	func (attr *BufferAttribute) GetX( index ) {
-
-		return attr.Array[ index * attr.ItemSize ];
-
-	},
-
-	func (attr *BufferAttribute) SetX( index, x ) {
-
-		attr.Array[ index * attr.ItemSize ] = x;
-
-		return this;
-
-	},
-
-	func (attr *BufferAttribute) GetY( index ) {
-
-		return attr.Array[ index * attr.ItemSize + 1 ];
-
-	},
-
-	func (attr *BufferAttribute) SetY( index, y ) {
-
-		attr.Array[ index * attr.ItemSize + 1 ] = y;
-
-		return this;
-
-	},
-
-	func (attr *BufferAttribute) GetZ( index ) {
-
-		return attr.Array[ index * attr.ItemSize + 2 ];
-
-	},
-
-	func (attr *BufferAttribute) SetZ( index, z ) {
-
-		attr.Array[ index * attr.ItemSize + 2 ] = z;
-
-		return this;
-
-	},
-
-	func (attr *BufferAttribute) GetW( index ) {
-
-		return attr.Array[ index * attr.ItemSize + 3 ];
-
-	},
-
-	func (attr *BufferAttribute) SetW( index, w ) {
-
-		attr.Array[ index * attr.ItemSize + 3 ] = w;
-
-		return this;
-
-	},
-
-	func (attr *BufferAttribute) SetXY( index, x, y ) {
-
-		index *= attr.ItemSize;
-
-		attr.Array[ index + 0 ] = x;
-		attr.Array[ index + 1 ] = y;
-
-		return this;
-
-	},
-
-	func (attr *BufferAttribute) SetXYZ( index, x, y, z ) {
-
-		index *= attr.ItemSize;
-
-		attr.Array[ index + 0 ] = x;
-		attr.Array[ index + 1 ] = y;
-		attr.Array[ index + 2 ] = z;
-
-		return this;
-
-	},
-
-	func (attr *BufferAttribute) SetXYZW( index, x, y, z, w ) {
-
-		index *= attr.ItemSize;
-
-		attr.Array[ index + 0 ] = x;
-		attr.Array[ index + 1 ] = y;
-		attr.Array[ index + 2 ] = z;
-		attr.Array[ index + 3 ] = w;
-
-		return this;
-
-	},
-
-	func (attr *BufferAttribute) OnUpload( callback ) {
-
-		attr.OnUploadCallback = callback;
-
-		return this;
-
-	},
-
-	func (attr *BufferAttribute) Clone() {
-
-		return new attr.Constructor( attr.Array, attr.ItemSize ).copy( this );
+		attr.array[index1+i] = attribute.array[index2+i]
 
 	}
 
-} );
+}
 
-//
+func (attr *BufferAttribute) CopyArray(array []interface{}) {
 
-function Int8BufferAttribute( array, itemSize ) {
-
-	BufferAttribute.call( this, new Int8Array( array ), itemSize );
+	attr.array = make([]interface{}, len(array))
+	copy(array, attr.array)
 
 }
 
-Int8BufferAttribute.prototype = Object.create( BufferAttribute.prototype );
-Int8BufferAttribute.prototype.constructor = Int8BufferAttribute;
+func (attr *BufferAttribute) CopyColorsArray(colors []*math3.Color) {
 
+	offset := 0
 
-function Uint8BufferAttribute( array, itemSize ) {
+	for i := 0; i < colors.length; i++ {
 
-	BufferAttribute.call( this, new Uint8Array( array ), itemSize );
+		color := colors[i]
 
-}
+		if color == nil {
 
-Uint8BufferAttribute.prototype = Object.create( BufferAttribute.prototype );
-Uint8BufferAttribute.prototype.constructor = Uint8BufferAttribute;
+			glog.Warningf("three.core.BufferAttribute.CopyColorsArray(): color is nil %d\n", i)
+			color = math3.NewColor()
 
+		}
 
-function Uint8ClampedBufferAttribute( array, itemSize ) {
+		array[offset] = color.R
+		offset++
+		array[offset] = color.G
+		offset++
+		array[offset] = color.B
+		offset++
 
-	BufferAttribute.call( this, new Uint8ClampedArray( array ), itemSize );
-
-}
-
-Uint8ClampedBufferAttribute.prototype = Object.create( BufferAttribute.prototype );
-Uint8ClampedBufferAttribute.prototype.constructor = Uint8ClampedBufferAttribute;
-
-
-function Int16BufferAttribute( array, itemSize ) {
-
-	BufferAttribute.call( this, new Int16Array( array ), itemSize );
+	}
 
 }
 
-Int16BufferAttribute.prototype = Object.create( BufferAttribute.prototype );
-Int16BufferAttribute.prototype.constructor = Int16BufferAttribute;
+/*func (attr *BufferAttribute) CopyIndicesArray(indices []*math3.Vector3) {
 
+	offset := 0
 
-function Uint16BufferAttribute( array, itemSize ) {
+	for i := 0; i < indices.length; i ++ {
 
-	BufferAttribute.call( this, new Uint16Array( array ), itemSize );
+		index := indices[i]
 
-}
+		array[offset] = index.A; offset++
+		array[offset] = index.B; offset++
+		array[offset] = index.C; offset++
 
-Uint16BufferAttribute.prototype = Object.create( BufferAttribute.prototype );
-Uint16BufferAttribute.prototype.constructor = Uint16BufferAttribute;
+	}
 
+}*/
 
-function Int32BufferAttribute( array, itemSize ) {
+func (attr *BufferAttribute) CopyVector2sArray(vectors []*math3.Vector3) {
 
-	BufferAttribute.call( this, new Int32Array( array ), itemSize );
+	offset := 0
 
-}
+	for i := 0; i < len(vectors); i++ {
 
-Int32BufferAttribute.prototype = Object.create( BufferAttribute.prototype );
-Int32BufferAttribute.prototype.constructor = Int32BufferAttribute;
+		vector := vectors[i]
 
+		if vector == nil {
 
-function Uint32BufferAttribute( array, itemSize ) {
+			glog.Warningf("three.core.BufferAttribute.CopyVector2sArray(): vector is nil, %d\n", i)
+			vector = math3.NewVector2()
 
-	BufferAttribute.call( this, new Uint32Array( array ), itemSize );
+		}
 
-}
+		array[offset] = vector.X
+		offset++
+		array[offset] = vector.Y
+		offset++
 
-Uint32BufferAttribute.prototype = Object.create( BufferAttribute.prototype );
-Uint32BufferAttribute.prototype.constructor = Uint32BufferAttribute;
-
-
-function Float32BufferAttribute( array, itemSize ) {
-
-	BufferAttribute.call( this, new Float32Array( array ), itemSize );
-
-}
-
-Float32BufferAttribute.prototype = Object.create( BufferAttribute.prototype );
-Float32BufferAttribute.prototype.constructor = Float32BufferAttribute;
-
-
-function Float64BufferAttribute( array, itemSize ) {
-
-	BufferAttribute.call( this, new Float64Array( array ), itemSize );
+	}
 
 }
 
-Float64BufferAttribute.prototype = Object.create( BufferAttribute.prototype );
-Float64BufferAttribute.prototype.constructor = Float64BufferAttribute;
+func (attr *BufferAttribute) CopyVector3sArray(vectors []*math3.Vector3) {
 
-//
+	offset := 0
 
-export {
-	Float64BufferAttribute,
-	Float32BufferAttribute,
-	Uint32BufferAttribute,
-	Int32BufferAttribute,
-	Uint16BufferAttribute,
-	Int16BufferAttribute,
-	Uint8ClampedBufferAttribute,
-	Uint8BufferAttribute,
-	Int8BufferAttribute,
-	BufferAttribute
-};
-*/
+	for i := 0; i < len(vectors); i++ {
+
+		vector := vectors[i]
+
+		if vector == nil {
+
+			glog.Warningf("three.core.BufferAttribute.CopyVector3sArray(): vector is nil, %d\n", i)
+			vector = math3.NewVector3()
+
+		}
+
+		array[offset] = vector.X
+		offset++
+		array[offset] = vector.Y
+		offset++
+		array[offset] = vector.Z
+		offset++
+
+	}
+
+}
+
+func (attr *BufferAttribute) CopyVector4sArray(vectors []*math3.Vector4) {
+
+	offset := 0
+
+	for i := 0; i < len(vectors); i++ {
+
+		var vector = vectors[i]
+
+		if vector == nil {
+
+			glog.Warningf("three.core.BufferAttribute.CopyVector4sArray(): vector is nil, %d\n", i)
+			vector = math3.NewVector4()
+
+		}
+
+		array[offset] = vector.X
+		offset++
+		array[offset] = vector.Y
+		offset++
+		array[offset] = vector.Z
+		offset++
+		array[offset] = vector.W
+		offset++
+
+	}
+
+}
+
+func (attr *BufferAttribute) Set(value []interface{}, offset int) {
+
+	attr.array = make([]interface{}, len(value)-offset)
+
+	for i := 0; i < len(value)-offset; i++ {
+
+		attr.array[i] = value[i+offset]
+
+	}
+
+}
+
+/*func (attr *BufferAttribute) GetX(index int) interface{} {
+
+	return attr.array[index * attr.ItemSize]
+
+}
+
+func (attr *BufferAttribute) SetX(index int, x interface{}) {
+
+	attr.array[index * attr.ItemSize] = x
+
+}
+
+func (attr *BufferAttribute) GetY(index int) interface{} {
+
+	return attr.array[index * attr.ItemSize + 1]
+
+}
+
+func (attr *BufferAttribute) SetY(index int, y interface{}) {
+
+	attr.array[index * attr.ItemSize + 1] = y
+
+}
+
+func (attr *BufferAttribute) GetZ(index) {
+
+	return attr.array[index * attr.ItemSize + 2]
+
+}
+
+func (attr *BufferAttribute) SetZ(index, z) {
+
+	attr.array[index * attr.ItemSize + 2] = z
+
+	return attr
+
+}
+
+func (attr *BufferAttribute) GetW(index) {
+
+	return attr.array[index * attr.ItemSize + 3]
+
+}
+
+func (attr *BufferAttribute) SetW(index, w) {
+
+	attr.array[index * attr.ItemSize + 3] = w
+
+	return attr
+
+}
+
+func (attr *BufferAttribute) SetXY(index, x, y) {
+
+	index *= attr.ItemSize
+
+	attr.array[index + 0] = x
+	attr.array[index + 1] = y
+
+	return attr
+
+}
+
+func (attr *BufferAttribute) SetXYZ(index, x, y, z) {
+
+	index *= attr.ItemSize
+
+	attr.array[index + 0] = x
+	attr.array[index + 1] = y
+	attr.array[index + 2] = z
+
+	return attr
+
+}
+
+func (attr *BufferAttribute) SetXYZW(index, x, y, z, w) {
+
+	index *= attr.ItemSize
+
+	attr.array[index + 0] = x
+	attr.array[index + 1] = y
+	attr.array[index + 2] = z
+	attr.array[index + 3] = w
+
+	return attr
+
+}*/
+
+func (attr *BufferAttribute) OnUpload(callback func()) {
+
+	attr.onUploadCallback = callback
+
+}
+
+func (attr *BufferAttribute) Clone() *BufferAttribute {
+
+	newAttr := NewBufferAttribute(attr.array, attr.ItemSize)
+	newAttr.Copy(attr)
+	return newAttr
+
+}
+
+type Int8BufferAttribute struct {
+	*BufferAttribute
+}
+
+func (attr *Int8BufferAttribute) Array() []int8 {
+	return attr.array.([]int8)
+}
+
+func (attr *Int8BufferAttribute) SetArray(array []int8) {
+	attr.array = array
+}
+
+type Uint8BufferAttribute struct {
+	*BufferAttribute
+}
+
+func (attr *Uint8BufferAttribute) Array() []uint8 {
+	return attr.array.([]uint8)
+}
+
+func (attr *Uint8BufferAttribute) SetArray(array []uint8) {
+	attr.array = array
+}
+
+type Uint8ClampedBufferAttribute struct {
+	*BufferAttribute
+}
+
+func (attr *Uint8ClampedBufferAttribute) Array() []uint8 {
+	return attr.array.([]uint8)
+}
+
+func (attr *Uint8ClampedBufferAttribute) SetArray(array []uint8) {
+	attr.array = array
+}
+
+type Int16BufferAttribute struct {
+	*BufferAttribute
+}
+
+func (attr *Int16BufferAttribute) Array() []int16 {
+	return attr.array.([]int16)
+}
+
+func (attr *Int16BufferAttribute) SetArray(array []int16) {
+	attr.array = array
+}
+
+type Uint16BufferAttribute struct {
+	*BufferAttribute
+}
+
+func (attr *Uint16BufferAttribute) Array() []uint16 {
+	return attr.array.([]uint16)
+}
+
+func (attr *Uint16BufferAttribute) SetArray(array []uint16) {
+	attr.array = uarray
+}
+
+type Int32BufferAttribute struct {
+	*BufferAttribute
+}
+
+func (attr *Int32BufferAttribute) Array() []int32 {
+	return attr.array.([]int32)
+}
+
+func (attr *Int32BufferAttribute) SetArray(array []int32) {
+	attr.array = array
+}
+
+type Uint32BufferAttribute struct {
+	*BufferAttribute
+}
+
+func (attr *Uint32BufferAttribute) Array() []uint32 {
+	return attr.array.([]uint32)
+}
+
+func (attr *Uint32BufferAttribute) SetArray(array []uint32) {
+	attr.array = uarray
+}
+
+type Float32BufferAttribute struct {
+	*BufferAttribute
+}
+
+func (attr *Float32BufferAttribute) Array() []float32 {
+	return attr.array.([]float32)
+}
+
+func (attr *Float32BufferAttribute) SetArray(array []float32) {
+	attr.array = array
+}
+
+type Float64BufferAttribute struct {
+	*BufferAttribute
+}
+
+func (attr *Float64BufferAttribute) Array() []float64 {
+	return attr.array.([]float64)
+}
+
+func (attr *Float64BufferAttribute) SetArray(array []float64) {
+	attr.array = array
+}
